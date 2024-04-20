@@ -3,7 +3,24 @@ library(tidyverse)
 ```
 
 ```{r}
-soil_data <- read_csv("EAS_Rfiles/Soil/eas_mattapan_data_cleaned.csv") %>%
-  rename_all(~tolower(gsub(" ", "_", .)))
+soil_data <- read_csv("eas_mattapan_data_cleaned.csv") %>%
+  rename_all(~tolower(gsub(" ", "_", .))) %>%
+  filter(!str_detect(info, "NIST"))
+```
+
+```{r}
+# Split info columns to coordinate system
+soil_data %>% 
+  mutate(category = case_when(str_length(info) == 3 ~ "normal",
+                              str_detect(info, "RB") ~ "raised_bed",
+                              str_detect(info, "green") ~ "produce")) %>%
+  mutate(level = str_extract(info, "[TD]$"), 
+         x_coord = str_extract(info, "^[A-G]"),
+         y_coord = case_when(category == "normal" ~ 
+                               str_extract(info, "(?<=\\D)[0-9]"))) %>%
+  mutate(level = case_when(level == "T" ~ "topsoil", level == "D" ~ "subsurface"))
+
+## NEXT STEP: Map the x and y coordinates to distances
+  
 ```
 
