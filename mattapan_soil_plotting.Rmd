@@ -1,0 +1,9 @@
+```{r}
+library(tidyverse)
+```
+
+```{r}
+soil_data <- read_csv("EAS_Rfiles/Soil/eas_mattapan_data_cleaned.csv") %>%
+  rename_all(~tolower(gsub(" ", "_", .)))
+```
+
