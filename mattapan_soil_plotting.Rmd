@@ -10,7 +10,7 @@ soil_data <- read_csv("eas_mattapan_data_cleaned.csv") %>%
 
 ```{r}
 # Split info columns to coordinate system
-soil_data %>% 
+soil_data_cleaned <- soil_data %>% 
   mutate(category = case_when(str_length(info) == 3 ~ "normal",
                               str_detect(info, "RB") ~ "raised_bed",
                               str_detect(info, "green") ~ "produce")) %>%
@@ -18,9 +18,15 @@ soil_data %>%
          x_coord = str_extract(info, "^[A-G]"),
          y_coord = case_when(category == "normal" ~ 
                                str_extract(info, "(?<=\\D)[0-9]"))) %>%
-  mutate(level = case_when(level == "T" ~ "topsoil", level == "D" ~ "subsurface"))
+  mutate(level = case_when(level == "T" ~ "topsoil", level == "D" ~ "subsurface")) %>%
+  mutate_at(vars(contains("concentration")), as.numeric) %>% 
+  mutate(across(contains("concentration"), ~ifelse(is.na(.), 0, .)))
 
 ## NEXT STEP: Map the x and y coordinates to distances
   
+```
+
+```{r}
+soil_data_cleaned
 ```
 
