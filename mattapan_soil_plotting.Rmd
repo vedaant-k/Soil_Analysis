@@ -5,7 +5,8 @@ library(tidyverse)
 ```{r}
 soil_data <- read_csv("eas_mattapan_data_cleaned.csv") %>%
   rename_all(~tolower(gsub(" ", "_", .))) %>%
-  filter(!str_detect(info, "NIST"))
+  filter(!str_detect(info, "NIST")) %>%
+  select(contains("pb"), test_label, info)
 ```
 
 ```{r}
@@ -15,8 +16,8 @@ soil_data_cleaned <- soil_data %>%
                               str_detect(info, "RB") ~ "raised_bed",
                               str_detect(info, "green") ~ "produce")) %>%
   mutate(level = str_extract(info, "[TD]$"), 
-         x_coord = str_extract(info, "^[A-G]"),
-         y_coord = case_when(category == "normal" ~ 
+         plot_row = str_extract(info, "^[A-G]"),
+         plot_col = case_when(category == "normal" ~ 
                                str_extract(info, "(?<=\\D)[0-9]"))) %>%
   mutate(level = case_when(level == "T" ~ "topsoil", level == "D" ~ "subsurface")) %>%
   mutate_at(vars(contains("concentration")), as.numeric) %>% 
@@ -27,6 +28,32 @@ soil_data_cleaned <- soil_data %>%
 ```
 
 ```{r}
-soil_data_cleaned
+soil_data_cleaned %>%
+  group_by(plot_row, level) %>%
+  summarize(avg_plot_row = mean(pb_concentration)) %>%
+  drop_na() %>%
+  ggplot() +
+    geom_col(aes(x = plot_row, y = avg_plot_row, fill = level), position = "dodge") +
+    geom_hline(yintercept = 100, linetype = "dashed") +
+    labs(x = "Plot Row (higher the letter, further from road)", 
+         y = "Lead Concentration(ppm)",
+         fill = "Soil Depth")+
+  geom_text(aes(label = "EPA Safe Limit for Gardening"), x = "D", y = 105)
+  
+```
+```{r}
+soil_data_cleaned %>%
+  filter(level == "topsoil") %>%
+  drop_na() %>%
+  ggplot() +
+    geom_tile(aes(x = plot_col, y = plot_row, fill = pb_concentration))
+```
+```{r}
+soil_data_cleaned %>%
+  filter(category == "normal") %>%
+  ggplot() +
+    geom_boxplot(aes(x = level, y = pb_concentration)) +
+    labs(x = "Soil Depth Category", y = "Lead Concentration (ppm)",
+         title = "Comparison of topsoil and subsurface lead concentrations")
 ```
 
