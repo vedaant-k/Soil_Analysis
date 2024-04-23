@@ -56,4 +56,7 @@ soil_data_cleaned %>%
     labs(x = "Soil Depth Category", y = "Lead Concentration (ppm)",
          title = "Comparison of topsoil and subsurface lead concentrations")
 ```
+```{r}
+write.csv(soil_data_cleaned, file = "cleaned_soil_data.csv")
+```
 
